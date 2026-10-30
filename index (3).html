@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Penilaian SUS & ASQ</title>
+<style>
+:root {
+  --bg: #f4f7fb; --card: #ffffff; --ink: #172033; --muted: #667085;
+  --line: #e4e9f1; --primary: #3659e3; --primary-soft: #edf1ff;
+  --green: #138a63; --orange: #b76e00; --red: #c43c4b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--ink); background: var(--bg); }
+header { background: linear-gradient(120deg, #1f347d, #3659e3); color: white; padding: 30px 20px; }
+.wrap { max-width: 1180px; margin: auto; }
+header h1 { margin: 0 0 8px; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+header p { margin: 0; color: #e5eaff; line-height: 1.5; }
+main { max-width: 1180px; margin: 24px auto 50px; padding: 0 16px; }
+.top-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat, .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 5px 18px rgba(20,35,80,.04); }
+.stat { padding: 18px 20px; }
+.stat .label { font-size: .88rem; color: var(--muted); margin-bottom: 8px; }
+.stat .value { font-size: 1.8rem; font-weight: 750; letter-spacing: -.03em; }
+.stat .sub { color: var(--muted); font-size: .82rem; margin-top: 5px; }
+.panel { padding: 22px; margin-bottom: 20px; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+h2 { margin: 0 0 6px; font-size: 1.25rem; }
+h3 { font-size: 1rem; margin: 18px 0 10px; }
+.desc { color: var(--muted); font-size: .91rem; line-height: 1.55; margin: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+label { font-size: .88rem; font-weight: 650; }
+input[type="text"], input[type="number"], select { width: 100%; border: 1px solid #ccd5e3; border-radius: 9px; padding: 10px 11px; color: var(--ink); background: white; font: inherit; }
+input:focus, select:focus { outline: 3px solid #dce4ff; border-color: var(--primary); }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 700px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 620px; }
+th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+th { font-size: .82rem; color: var(--muted); background: #f8faff; }
+td { font-size: .92rem; }
+td small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.score-cell { font-weight: 750; color: var(--primary); text-align: center; }
+.scale { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: .82rem; margin: 10px 0 16px; }
+.scale span { background: #f2f5fa; padding: 6px 9px; border-radius: 7px; }
+.question { min-width: 280px; }
+.answer { max-width: 110px; min-width: 85px; }
+.result-box { background: var(--primary-soft); border: 1px solid #dce4ff; border-radius: 12px; padding: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.result-number { font-size: 2rem; font-weight: 800; color: var(--primary); }
+.badge { display: inline-block; border-radius: 999px; padding: 6px 10px; background: #e8f7f0; color: var(--green); font-size: .82rem; font-weight: 700; }
+.note { background: #fff8e8; border: 1px solid #f4e2b7; border-radius: 10px; padding: 12px 14px; color: #79531a; font-size: .87rem; line-height: 1.5; margin-top: 14px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+button { border: 0; border-radius: 9px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+.btn-primary { color: white; background: var(--primary); }
+.btn-secondary { color: #24345a; background: #edf1f7; }
+button:hover { filter: brightness(.97); }
+.footer { color: var(--muted); font-size: .82rem; text-align: center; padding: 6px 0 20px; }
+@media (max-width: 760px) {
+  .top-grid { grid-template-columns: 1fr; }
+  .meta-grid { grid-template-columns: 1fr; }
+  .panel { padding: 16px; }
+  header { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Dashboard Penilaian SUS &amp; ASQ</h1>
+    <p>Masukkan jawaban responden untuk menghitung skor secara otomatis. Perhitungan dilakukan langsung di browser.</p>
+  </div>
+</header>
+<main>
+  <section class="top-grid" aria-label="Ringkasan skor">
+    <div class="stat"><div class="label">Skor SUS</div><div class="value" id="susSummary">— / 100</div><div class="sub" id="susSummarySub">Lengkapi 10 jawaban</div></div>
+    <div class="stat"><div class="label">Skor ASQ</div><div class="value" id="asqSummary">— / 7</div><div class="sub" id="asqSummarySub">Lengkapi 3 jawaban</div></div>
+    <div class="stat"><div class="label">Status pengisian</div><div class="value" id="completionSummary">0/13</div><div class="sub">Jumlah jawaban valid di kedua instrumen</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>Informasi Penilaian</h2><p class="desc">Opsional: isi identitas responden dan skenario yang sedang dinilai.</p></div>
+    </div>
+    <div class="meta-grid">
+      <div class="field"><label for="respondent">ID / nama responden</label><input id="respondent" type="text" placeholder="Contoh: R-01"></div>
+      <div class="field"><label for="scenario">Nama aplikasi / skenario tugas</label><input id="scenario" type="text" placeholder="Contoh: Mobile banking — transfer"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>1. System Usability Scale (SUS)</h2><p class="desc">Pilih jawaban 1–5 untuk setiap pernyataan. Item ganjil positif: jawaban − 1. Item genap negatif: 5 − jawaban.</p></div>
+      <span class="badge">Skor akhir 0–100</span>
+    </div>
+    <div class="scale"><span>1 — Sangat tidak setuju</span><span>2 — Tidak setuju</span><span>3 — Netral</span><span>4 — Setuju</span><span>5 — Sangat setuju</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>No.</th><th>Pernyataan SUS</th><th>Jawaban (1–5)</th><th>Kontribusi</th></tr></thead>
+        <tbody id="susRows"></tbody>
+      </table>
+    </div>
+    <div class="result-box">
+      <div><div class="desc">Jumlah kontribusi (maks. 40)</div><div class="result-number" id="susRaw">—</div></div>
+      <div><div class="desc">Skor SUS = jumlah kontribusi × 2,5</div><div class="result-number" id="susScore">— / 100</div><div class="desc" id="susInterpretation">Isi semua jawaban untuk melihat hasil.</div></div>
+    </div>
+    <div class="note">Catatan: skor SUS bukan persentase kepuasan. Interpretasi kategori di dashboard ini bersifat panduan umum; gunakan acuan penelitian yang sesuai untuk pelaporan formal.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div><h2>2. After-Scenario Questionnaire (ASQ)</h2><p class="desc">Isi setelah responden menyelesaikan satu skenario. Skor dihitung dari rata-rata item valid yang dijawab.</p></div>
+      <span class="badge">Skor 1–7</span>
+    </div>
+    <div class="scale"><span>1 — Sangat tidak puas</span><span>2</span><span>3</span><span>4 — Netral</span><span>5</span><span>6</span><span>7 — Sangat puas</span><span>N/A — Tidak berlaku</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>No.</th><th>Aspek / pernyataan ASQ</th><th>Jawaban (1–7)</th><th>Skor item</th></tr></thead>
+        <tbody id="asqRows"></tbody>
+      </table>
+    </div>
+    <div class="result-box">
+      <div><div class="desc">Jumlah item valid</div><div class="result-number" id="asqValid">0/3</div></div>
+      <div><div class="desc">Rata-rata item valid</div><div class="result-number" id="asqScore">— / 7</div><div class="desc" id="asqInterpretation">Isi minimal satu jawaban valid.</div></div>
+    </div>
+    <div class="note">Jika item dipilih N/A atau dibiarkan kosong, item tersebut tidak dimasukkan dalam rata-rata ASQ. Skor tinggi menunjukkan kepuasan yang lebih tinggi.</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>Ringkasan &amp; Ekspor</h2><p class="desc">Unduh hasil penilaian saat ini sebagai file CSV yang dapat dibuka di Excel.</p></div></div>
+    <div class="actions">
+      <button class="btn-primary" type="button" id="exportBtn">Unduh hasil CSV</button>
+      <button class="btn-secondary" type="button" id="resetBtn">Kosongkan jawaban</button>
+    </div>
+    <p class="desc" id="exportStatus" style="margin-top:12px"></p>
+  </section>
+  <div class="footer">Dashboard berjalan secara lokal di browser. Jawaban tidak dikirim ke server.</div>
+</main>
+<script>
+const susQuestions = [
+  "Saya merasa ingin menggunakan sistem ini secara sering.",
+  "Saya merasa sistem ini terlalu rumit.",
+  "Saya merasa sistem ini mudah digunakan.",
+  "Saya merasa membutuhkan bantuan orang teknis untuk menggunakan sistem ini.",
+  "Saya merasa berbagai fungsi dalam sistem ini terintegrasi dengan baik.",
+  "Saya merasa terdapat terlalu banyak ketidakkonsistenan dalam sistem ini.",
+  "Saya membayangkan kebanyakan orang akan belajar menggunakan sistem ini dengan sangat cepat.",
+  "Saya merasa sistem ini sangat merepotkan untuk digunakan.",
+  "Saya merasa percaya diri saat menggunakan sistem ini.",
+  "Saya perlu mempelajari banyak hal sebelum dapat mulai menggunakan sistem ini."
+];
+const asqQuestions = [
+  ["Kemudahan menyelesaikan tugas", "Secara keseluruhan, saya puas dengan kemudahan menyelesaikan tugas dalam skenario ini."],
+  ["Waktu yang dibutuhkan", "Secara keseluruhan, saya puas dengan waktu yang dibutuhkan untuk menyelesaikan tugas dalam skenario ini."],
+  ["Informasi pendukung", "Secara keseluruhan, saya puas dengan informasi pendukung (bantuan online, pesan, dokumentasi) saat menyelesaikan tugas."]
+];
+const susBody = document.getElementById("susRows");
+const asqBody = document.getElementById("asqRows");
+susQuestions.forEach((q, i) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${i+1}</td><td class="question">${q}<small>${i%2===0 ? "Pernyataan positif" : "Pernyataan negatif"}</small></td><td><select class="answer sus-answer" data-index="${i}" aria-label="Jawaban SUS nomor ${i+1}"><option value="">Pilih…</option>${[1,2,3,4,5].map(n=>`<option value="${n}">${n}</option>`).join("")}</select></td><td class="score-cell" id="sus-contrib-${i}">—</td>`;
+  susBody.appendChild(tr);
+});
+asqQuestions.forEach((q, i) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${i+1}</td><td class="question"><strong>${q[0]}</strong><small>${q[1]}</small></td><td><select class="answer asq-answer" data-index="${i}" aria-label="Jawaban ASQ nomor ${i+1}"><option value="">Pilih…</option>${[1,2,3,4,5,6,7].map(n=>`<option value="${n}">${n}</option>`).join("")}<option value="NA">N/A</option></select></td><td class="score-cell" id="asq-score-${i}">—</td>`;
+  asqBody.appendChild(tr);
+});
+function fmt(n, digits=2) { return Number.isInteger(n) ? String(n) : n.toFixed(digits).replace(/\.?0+$/, ""); }
+function calculate() {
+  const susAnswers = [...document.querySelectorAll(".sus-answer")].map(el => el.value === "" ? null : Number(el.value));
+  let susRaw = 0, susValid = 0;
+  susAnswers.forEach((answer, i) => {
+    const cell = document.getElementById(`sus-contrib-${i}`);
+    if (answer === null) { cell.textContent = "—"; return; }
+    const contribution = i % 2 === 0 ? answer - 1 : 5 - answer;
+    susRaw += contribution; susValid++;
+    cell.textContent = contribution;
+  });
+  const susComplete = susValid === 10;
+  const susScore = susComplete ? susRaw * 2.5 : null;
+  document.getElementById("susRaw").textContent = susValid ? `${susRaw}${susComplete ? " / 40" : " (sementara)"}` : "—";
+  document.getElementById("susScore").textContent = susComplete ? `${fmt(susScore)} / 100` : "— / 100";
+  let susText = "Isi semua 10 jawaban untuk menghitung skor akhir.";
+  if (susComplete) {
+    if (susScore < 50) susText = "Skor relatif rendah; evaluasi usability lebih lanjut disarankan.";
+    else if (susScore < 68) susText = "Di bawah patokan rata-rata umum (sekitar 68).";
+    else if (susScore < 80) susText = "Di atas patokan rata-rata umum; interpretasi bergantung konteks.";
+    else susText = "Skor tinggi dalam panduan umum; bukan persentase kepuasan.";
+  }
+  document.getElementById("susInterpretation").textContent = susText;
+  document.getElementById("susSummary").textContent = susComplete ? `${fmt(susScore)} / 100` : "— / 100";
+  document.getElementById("susSummarySub").textContent = `${susValid}/10 jawaban terisi`;
+
+  const asqAnswers = [...document.querySelectorAll(".asq-answer")].map(el => el.value === "" || el.value === "NA" ? null : Number(el.value));
+  asqAnswers.forEach((answer, i) => document.getElementById(`asq-score-${i}`).textContent = answer === null ? "—" : answer);
+  const valid = asqAnswers.filter(n => n !== null);
+  const asqScore = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+  document.getElementById("asqValid").textContent = `${valid.length}/3`;
+  document.getElementById("asqScore").textContent = asqScore === null ? "— / 7" : `${fmt(asqScore)} / 7`;
+  document.getElementById("asqInterpretation").textContent = asqScore === null ? "Isi minimal satu jawaban valid." : valid.length < 3 ? "Rata-rata sementara dari item yang valid." : "Rata-rata dari ketiga item ASQ.";
+  document.getElementById("asqSummary").textContent = asqScore === null ? "— / 7" : `${fmt(asqScore)} / 7`;
+  document.getElementById("asqSummarySub").textContent = `${valid.length}/3 item valid`;
+  document.getElementById("completionSummary").textContent = `${susValid + valid.length}/13`;
+  return {susAnswers, susRaw, susValid, susComplete, susScore, asqAnswers, asqScore, asqValid: valid.length};
+}
+document.addEventListener("change", e => { if (e.target.matches(".sus-answer, .asq-answer")) calculate(); });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Kosongkan semua jawaban SUS dan ASQ?")) return;
+  document.querySelectorAll(".sus-answer, .asq-answer").forEach(el => el.value = "");
+  document.getElementById("respondent").value = "";
+  document.getElementById("scenario").value = "";
+  document.getElementById("exportStatus").textContent = "";
+  calculate();
+});
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const r = calculate();
+  const respondent = document.getElementById("respondent").value.trim();
+  const scenario = document.getElementById("scenario").value.trim();
+  const rows = [
+    ["Jenis", "Nomor", "Pernyataan/Aspek", "Jawaban", "Skor kontribusi/item"],
+    ["Info", "", "ID/nama responden", respondent, ""],
+    ["Info", "", "Aplikasi/skenario", scenario, ""]
+  ];
+  r.susAnswers.forEach((a,i) => rows.push(["SUS", i+1, susQuestions[i], a ?? "", a === null ? "" : (i%2===0 ? a-1 : 5-a)]));
+  rows.push(["SUS", "", "Jumlah kontribusi", "", r.susValid ? r.susRaw : ""]);
+  rows.push(["SUS", "", "Skor akhir (hanya jika 10 item terisi)", "", r.susComplete ? r.susScore : "Belum lengkap"]);
+  r.asqAnswers.forEach((a,i) => {
+    const raw = document.querySelectorAll(".asq-answer")[i].value;
+    rows.push(["ASQ", i+1, asqQuestions[i][0], raw === "NA" ? "N/A" : (a ?? ""), a ?? ""]);
+  });
+  rows.push(["ASQ", "", "Jumlah item valid", "", r.asqValid]);
+  rows.push(["ASQ", "", "Rata-rata item valid", "", r.asqScore === null ? "Belum ada jawaban" : r.asqScore]);
+  const csv = "\uFEFF" + rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `penilaian_SUS_ASQ_${(respondent || "responden").replace(/[^a-z0-9_-]/gi,"_")}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  document.getElementById("exportStatus").textContent = "CSV berhasil disiapkan untuk diunduh.";
+});
+calculate();
+</script>
+</body>
+</html>
